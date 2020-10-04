@@ -67,6 +67,8 @@ trap(struct trapframe *tf)
     return;
   }
 
+  uint page_fault_addr = rcr2();
+
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
@@ -100,9 +102,13 @@ trap(struct trapframe *tf)
     break;
 
   case T_PGFLT:
-	VERIFY(handle_page_fault(/* fault address */rcr2()), 
-			"Failed to handle the page fault");
-	break;
+	if (page_fault_addr < KERNBASE) {
+		VERIFY(handle_page_fault(/* fault address */rcr2()), 
+				"Failed to handle the page fault");
+		break;
+	} else {
+		/* fall-through */
+	}
 
   //PAGEBREAK: 13
   default:
