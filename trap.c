@@ -8,6 +8,9 @@
 #include "traps.h"
 #include "spinlock.h"
 
+#include <stdbool.h>
+
+
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
@@ -30,6 +33,21 @@ void
 idtinit(void)
 {
   lidt(idt, sizeof(idt));
+}
+
+bool handle_page_fault(uint fault_addr) {
+	cprintf("%s: Page fault occured in 0x%x\n", __func__, fault_addr); // mjo
+
+	void* pg_begin = (void*)PGROUNDDOWN(fault_addr);
+	pde_t *pgdir = myproc()->pgdir;
+	void* mem = kalloc();
+	VERIFY(mem, "Failed to allocate a kernal page");
+	
+	memset(mem, 0, PGSIZE);
+    VERIFY(mappages(pgdir, pg_begin, PGSIZE, V2P(mem), PTE_W|PTE_U)==0, 
+      "allocuvm out of memory");
+
+	return true;
 }
 
 //PAGEBREAK: 41
@@ -77,6 +95,11 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
+
+  case T_PGFLT:
+	VERIFY(handle_page_fault(/* fault address */rcr2()), 
+			"Failed to handle the page fault");
+	break;
 
   //PAGEBREAK: 13
   default:
