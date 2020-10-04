@@ -48,13 +48,12 @@ sys_sbrk(void)
   int n;
   if(argint(0, &n) < 0)
     return -1;
-  //cprintf("%s: n: %d\n", __func__, n); // mjo
 
   int addr = myproc()->sz;
   struct proc* pr = myproc();
   if(n < 0) {
       VERIFY(deallocuvm(pr->pgdir, pr->sz, pr->sz + n) != 0,
-    		  "Failed to deallocuvm");
+    		  "%s: Failed to deallocuvm", __func__);
   }
   pr->sz += n;
   return addr;

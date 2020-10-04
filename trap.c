@@ -36,16 +36,16 @@ idtinit(void)
 }
 
 bool handle_page_fault(uint fault_addr) {
-	cprintf("%s: Page fault occured in 0x%x\n", __func__, fault_addr); // mjo
-
-	void* pg_begin = (void*)PGROUNDDOWN(fault_addr);
+	void *page_begin = (void *)PGROUNDDOWN(fault_addr);
 	pde_t *pgdir = myproc()->pgdir;
-	void* mem = kalloc();
-	if(!mem)
+	void *mem = kalloc();
+	if (!mem) {
+		cprintf("%s: out of memory\n", __func__);
 		return false;
-	
+	}
+
 	memset(mem, 0, PGSIZE);
-    if(mappages(pgdir, pg_begin, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
+	if (mappages(pgdir, page_begin, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0) {
 		kfree(mem);
 		return false;
 	}
@@ -102,9 +102,7 @@ trap(struct trapframe *tf)
     break;
 
   case T_PGFLT:
-	if (page_fault_addr < KERNBASE) {
-		VERIFY(handle_page_fault(/* fault address */rcr2()), 
-				"Failed to handle the page fault");
+	if (page_fault_addr < KERNBASE && handle_page_fault(page_fault_addr)) {
 		break;
 	} else {
 		/* fall-through */

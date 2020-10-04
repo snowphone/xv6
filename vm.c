@@ -343,7 +343,7 @@ copyuvm(pde_t *pgdir, uint sz)
 	for(uint i = 0; i < sz; i += PGSIZE){
 		pte_t* pte = walkpgdir(pgdir, (void *) i, 0);
 		if(!(*pte & PTE_P)) {
-			cprintf("%s: Not allocated page due to demand paging policy. Skip this page\n", __func__); // mjo
+			// Not allocated page due to demand paging policy. Thus skip this page
 			continue;
 		}
 
