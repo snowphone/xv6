@@ -41,11 +41,14 @@ bool handle_page_fault(uint fault_addr) {
 	void* pg_begin = (void*)PGROUNDDOWN(fault_addr);
 	pde_t *pgdir = myproc()->pgdir;
 	void* mem = kalloc();
-	VERIFY(mem, "Failed to allocate a kernal page");
+	if(!mem)
+		return false;
 	
 	memset(mem, 0, PGSIZE);
-    VERIFY(mappages(pgdir, pg_begin, PGSIZE, V2P(mem), PTE_W|PTE_U)==0, 
-      "allocuvm out of memory");
+    if(mappages(pgdir, pg_begin, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
+		kfree(mem);
+		return false;
+	}
 
 	return true;
 }
