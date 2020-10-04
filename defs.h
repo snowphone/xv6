@@ -189,3 +189,14 @@ void            clearpteu(pde_t *pgdir, char *uva);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+// A tiny wrapper macro of panic
+#define VERIFY(expr, ...)	\
+	do {					\
+		if(!(expr)) {\
+			cprintf("Failed reason: " __VA_ARGS__);\
+			cprintf("\n");\
+			panic("Error occured"); 	\
+		}\
+	}while(0)
+

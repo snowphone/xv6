@@ -7,15 +7,6 @@
 #include "proc.h"
 #include "elf.h"
 
-#define VERIFY(expr, ...)	\
-	do {					\
-		if(!(expr)) {\
-			cprintf("Failed reason: " __VA_ARGS__);\
-			cprintf("\n");\
-			panic("Error occured"); 	\
-		}\
-	}while(0)
-
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;  // for use in scheduler()
 
