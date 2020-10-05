@@ -59,7 +59,6 @@ struct proc {
   char name[16];               // Process name (debugging)
 
   char path[DIRSIZ];
-  struct inode* inode;
   struct proghdr ph;
 };
 

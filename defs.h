@@ -195,7 +195,8 @@ void            clearpteu(pde_t *pgdir, char *uva);
 #define VERIFY(expr, ...)	\
 	do {					\
 		if(!(expr)) {\
-			cprintf("Failed reason: " __VA_ARGS__);\
+			cprintf("Failed reason in %s %d: ", __func__, __LINE__);\
+			cprintf(__VA_ARGS__);\
 			cprintf("\n");\
 			panic("Error occured"); 	\
 		}\

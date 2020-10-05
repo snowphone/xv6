@@ -9,7 +9,9 @@
 #include "spinlock.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 
+#define min(x,y) ((x) < (y) ? (x) : (y))
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
@@ -36,17 +38,55 @@ idtinit(void)
 }
 
 bool handle_page_fault(uint fault_addr) {
-	void *page_begin = (void *)PGROUNDDOWN(fault_addr);
-	pde_t *pgdir = myproc()->pgdir;
-	void *mem = kalloc();
-	if (!mem) {
+	void *page = kalloc();
+	if (!page){
 		cprintf("%s: out of memory\n", __func__);
 		return false;
 	}
 
-	memset(mem, 0, PGSIZE);
-	if (mappages(pgdir, page_begin, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0) {
-		kfree(mem);
+	struct proc* pr = myproc();
+	struct proghdr ph = pr->ph;
+	pde_t *pgdir = pr->pgdir;
+
+	uint aligned_begin = PGROUNDDOWN(fault_addr);
+
+	uint text_sect[2] = {ph.vaddr, ph.vaddr + ph.filesz};
+	uint bss_sect[2] = {ph.vaddr + ph.filesz, ph.vaddr + ph.memsz};
+
+#define WITHIN(range, value) (range[0] <= (value) && (value) < range[1])
+
+	uint phy_addr;
+	if (WITHIN(text_sect, aligned_begin)) {
+		// text section but it may also contain parts of .bss section
+		uint delta = (aligned_begin - ph.vaddr),
+			 sz = min(PGSIZE, text_sect[1] - aligned_begin);
+
+		struct inode* inode = namei((char *)pr->path);
+		ilock(inode);
+		VERIFY(readi(inode, page, ph.off + delta, sz) == sz,
+				"failed to read");
+		iunlock(inode);
+
+		// Clear remaining bytes
+		memset(page + sz, 0, PGSIZE - sz);
+
+		//phy_addr = ph.paddr + delta;
+
+	} else if (WITHIN(bss_sect, aligned_begin)) { // bss & data
+		//uint delta = (aligned_begin - ph.vaddr);
+		memset(page, 0, PGSIZE);
+		//phy_addr = ph.paddr + delta;
+	} else if (aligned_begin < KERNBASE) { // heap section
+		memset(page, 0, PGSIZE);
+	} else {
+		cprintf("%s: Unauthorized access\n", __func__);
+		return false;
+	}
+
+	phy_addr = V2P(page);
+	if (mappages(pgdir, (void *)aligned_begin, PGSIZE, phy_addr, PTE_W | PTE_U) < 0) {
+		cprintf("%s: Failed to map the page into physical space\n", __func__);
+		kfree(page);
 		return false;
 	}
 
@@ -102,11 +142,10 @@ trap(struct trapframe *tf)
     break;
 
   case T_PGFLT:
-	if (page_fault_addr < KERNBASE && handle_page_fault(page_fault_addr)) {
+	if (handle_page_fault(page_fault_addr)) {
 		break;
-	} else {
-		/* fall-through */
-	}
+	} 
+	/* else: fall-through */
 
   //PAGEBREAK: 13
   default:
