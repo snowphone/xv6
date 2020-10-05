@@ -29,6 +29,9 @@ exec(char *path, char **argv)
   ilock(ip);
   pgdir = 0;
 
+  curproc->inode = ip;
+  safestrcpy(curproc->path, path, sizeof(curproc->path));
+
   // Check ELF header
   if(readi(ip, (char*)&elf, 0, sizeof(elf)) != sizeof(elf))
     goto bad;
@@ -45,6 +48,7 @@ exec(char *path, char **argv)
       goto bad;
     if(ph.type != ELF_PROG_LOAD)
       continue;
+	curproc->ph = ph;
     if(ph.memsz < ph.filesz)
       goto bad;
     if(ph.vaddr + ph.memsz < ph.vaddr)
