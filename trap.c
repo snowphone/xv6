@@ -37,60 +37,46 @@ idtinit(void)
   lidt(idt, sizeof(idt));
 }
 
+#define WITHIN(range, value) (range[0] <= (value) && (value) < range[1])
 bool handle_page_fault(uint fault_addr) {
-	void *page = kalloc();
-	if (!page){
-		cprintf("%s: out of memory\n", __func__);
+	if (fault_addr >= KERNBASE){
 		return false;
 	}
 
 	struct proc* pr = myproc();
 	struct proghdr ph = pr->ph;
 	pde_t *pgdir = pr->pgdir;
+	struct inode* inode = NULL;
 
 	uint aligned_begin = PGROUNDDOWN(fault_addr);
-
 	uint text_sect[2] = {ph.vaddr, ph.vaddr + ph.filesz};
-	uint bss_sect[2] = {ph.vaddr + ph.filesz, ph.vaddr + ph.memsz};
 
-#define WITHIN(range, value) (range[0] <= (value) && (value) < range[1])
-
-	uint phy_addr;
 	if (WITHIN(text_sect, aligned_begin)) {
-		// text section but it may also contain parts of .bss section
-		uint delta = (aligned_begin - ph.vaddr),
-			 sz = min(PGSIZE, text_sect[1] - aligned_begin);
+		uint offset = ph.off + (aligned_begin - ph.vaddr);
+		uint sz = min(PGSIZE, text_sect[1] - aligned_begin);
 
-		struct inode* inode = namei((char *)pr->path);
+
+		if(allocuvm(pgdir, aligned_begin, aligned_begin + sz) == 0)
+			goto bad;
+		inode = namei((char *)pr->path);
 		ilock(inode);
-		VERIFY(readi(inode, page, ph.off + delta, sz) == sz,
-				"failed to read");
-		iunlock(inode);
+		if(loaduvm(pgdir, (void*)aligned_begin, inode, offset, sz) < 0)
+			goto bad;
+		iunlockput(inode);
+		inode = NULL;
 
-		// Clear remaining bytes
-		memset(page + sz, 0, PGSIZE - sz);
-
-		//phy_addr = ph.paddr + delta;
-
-	} else if (WITHIN(bss_sect, aligned_begin)) { // bss & data
-		//uint delta = (aligned_begin - ph.vaddr);
-		memset(page, 0, PGSIZE);
-		//phy_addr = ph.paddr + delta;
-	} else if (aligned_begin < KERNBASE) { // heap section
-		memset(page, 0, PGSIZE);
-	} else {
-		cprintf("%s: Unauthorized access\n", __func__);
-		return false;
-	}
-
-	phy_addr = V2P(page);
-	if (mappages(pgdir, (void *)aligned_begin, PGSIZE, phy_addr, PTE_W | PTE_U) < 0) {
-		cprintf("%s: Failed to map the page into physical space\n", __func__);
-		kfree(page);
-		return false;
-	}
-
+	} else { // bss/data/heap section
+		if(allocuvm(pgdir, aligned_begin, aligned_begin + PGSIZE) == 0)
+			return false;
+	} 
 	return true;
+
+
+bad:
+	deallocuvm(pgdir, aligned_begin + PGSIZE, aligned_begin);
+	if(inode)
+		iunlockput(inode);
+	return false;
 }
 
 //PAGEBREAK: 41
