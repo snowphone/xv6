@@ -58,6 +58,7 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
 
+  // Fields for demand paging
   char path[DIRSIZ];
   struct proghdr ph;
 };

@@ -38,38 +38,37 @@ idtinit(void)
 }
 
 #define WITHIN(range, value) (range[0] <= (value) && (value) < range[1])
-bool handle_page_fault(uint fault_addr) {
-	if (fault_addr >= KERNBASE){
-		return false;
-	}
+bool bind_page(uint fault_addr) {
+  if (fault_addr >= KERNBASE) {
+    return false;
+  }
 
-	struct proc* pr = myproc();
-	struct proghdr ph = pr->ph;
-	pde_t *pgdir = pr->pgdir;
-	struct inode* inode = NULL;
+  struct proc *pr = myproc();
+  struct proghdr ph = pr->ph;
+  pde_t *pgdir = pr->pgdir;
+  struct inode *inode = NULL;
 
-	uint aligned_begin = PGROUNDDOWN(fault_addr);
-	uint text_sect[2] = {ph.vaddr, ph.vaddr + ph.filesz};
+  uint aligned_begin = PGROUNDDOWN(fault_addr);
+  uint text_sect[2] = {ph.vaddr, ph.vaddr + ph.filesz};
 
-	if (WITHIN(text_sect, aligned_begin)) {
-		uint offset = ph.off + (aligned_begin - ph.vaddr);
-		uint sz = min(PGSIZE, text_sect[1] - aligned_begin);
+  if (WITHIN(text_sect, aligned_begin)) {
+    uint offset = ph.off + (aligned_begin - ph.vaddr);
+    uint sz = min(PGSIZE, text_sect[1] - aligned_begin);
 
+    if (allocuvm(pgdir, aligned_begin, aligned_begin + sz) == 0)
+      goto bad;
+    inode = namei((char *)pr->path);
+    ilock(inode);
+    if (loaduvm(pgdir, (void *)aligned_begin, inode, offset, sz) < 0)
+      goto bad;
+    iunlockput(inode);
+    inode = NULL;
 
-		if(allocuvm(pgdir, aligned_begin, aligned_begin + sz) == 0)
-			goto bad;
-		inode = namei((char *)pr->path);
-		ilock(inode);
-		if(loaduvm(pgdir, (void*)aligned_begin, inode, offset, sz) < 0)
-			goto bad;
-		iunlockput(inode);
-		inode = NULL;
-
-	} else { // bss/data/heap section
-		if(allocuvm(pgdir, aligned_begin, aligned_begin + PGSIZE) == 0)
-			return false;
-	} 
-	return true;
+  } else { // bss/data/heap section
+    if (allocuvm(pgdir, aligned_begin, aligned_begin + PGSIZE) == 0)
+      return false;
+  }
+  return true;
 
 
 bad:
@@ -128,10 +127,10 @@ trap(struct trapframe *tf)
     break;
 
   case T_PGFLT:
-	if (handle_page_fault(page_fault_addr)) {
-		break;
-	} 
-	/* else: fall-through */
+    if (bind_page(page_fault_addr)) {
+      break;
+    }
+        /* else: fall-through */
 
   //PAGEBREAK: 13
   default:

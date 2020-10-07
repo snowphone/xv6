@@ -350,10 +350,8 @@ copyuvm(pde_t *pgdir, uint sz)
 		uint pa = PTE_ADDR(*pte);
 		uint flags = PTE_FLAGS(*pte);
 		char* mem = kalloc();
-		if(!mem) {
-			panic("Unable to allocate a new page");
+		if(!mem)
 			goto bad;
-		}
 		memmove(mem, (char*)P2V(pa), PGSIZE);
 		if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
 			kfree(mem);
