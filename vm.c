@@ -7,15 +7,6 @@
 #include "proc.h"
 #include "elf.h"
 
-#define VERIFY(expr, ...)	\
-	do {					\
-		if(!(expr)) {\
-			cprintf("Failed reason: " __VA_ARGS__);\
-			cprintf("\n");\
-			panic("Error occured"); 	\
-		}\
-	}while(0)
-
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;  // for use in scheduler()
 
@@ -66,7 +57,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
-static int
+int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
@@ -351,16 +342,16 @@ copyuvm(pde_t *pgdir, uint sz)
 	// Copy each page table in the page directory
 	for(uint i = 0; i < sz; i += PGSIZE){
 		pte_t* pte = walkpgdir(pgdir, (void *) i, 0);
-		VERIFY(pte, "copyuvm: pte should exist");
-		VERIFY(*pte & PTE_P, "copyuvm: page not present");
+		if(!(*pte & PTE_P)) {
+			// Not allocated page due to demand paging policy. Thus skip this page
+			continue;
+		}
 
 		uint pa = PTE_ADDR(*pte);
 		uint flags = PTE_FLAGS(*pte);
 		char* mem = kalloc();
-		if(!mem) {
-			panic("Unable to allocate a new page");
+		if(!mem)
 			goto bad;
-		}
 		memmove(mem, (char*)P2V(pa), PGSIZE);
 		if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
 			kfree(mem);

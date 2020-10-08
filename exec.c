@@ -29,6 +29,8 @@ exec(char *path, char **argv)
   ilock(ip);
   pgdir = 0;
 
+  safestrcpy(curproc->path, path, sizeof(curproc->path));
+
   // Check ELF header
   if(readi(ip, (char*)&elf, 0, sizeof(elf)) != sizeof(elf))
     goto bad;
@@ -45,16 +47,16 @@ exec(char *path, char **argv)
       goto bad;
     if(ph.type != ELF_PROG_LOAD)
       continue;
+	curproc->ph = ph;
     if(ph.memsz < ph.filesz)
       goto bad;
     if(ph.vaddr + ph.memsz < ph.vaddr)
       goto bad;
-    if((sz = allocuvm(pgdir, sz, ph.vaddr + ph.memsz)) == 0)
-      goto bad;
     if(ph.vaddr % PGSIZE != 0)
       goto bad;
-    if(loaduvm(pgdir, (char*)ph.vaddr, ip, ph.off, ph.filesz) < 0)
-      goto bad;
+	curproc->ph = ph;
+	safestrcpy(curproc->path, path, sizeof curproc->path);
+	sz = ph.vaddr + ph.memsz;
   }
   iunlockput(ip);
   end_op();

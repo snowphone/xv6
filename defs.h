@@ -1,3 +1,7 @@
+#pragma once
+
+#include "types.h"
+
 struct buf;
 struct context;
 struct file;
@@ -178,6 +182,7 @@ pde_t*          setupkvm_opt(pde_t *parent_pgdir);
 char*           uva2ka(pde_t*, char*);
 int             allocuvm(pde_t*, uint, uint);
 int             deallocuvm(pde_t*, uint, uint);
+int             mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
 void            freevm(pde_t*);
 void            inituvm(pde_t*, char*, uint);
 int             loaduvm(pde_t*, char*, struct inode*, uint, uint);
@@ -189,3 +194,15 @@ void            clearpteu(pde_t *pgdir, char *uva);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+// A tiny wrapper macro of panic
+#define VERIFY(expr, ...)	\
+	do {					\
+		if(!(expr)) {\
+			cprintf("Failed reason in %s %d: ", __func__, __LINE__);\
+			cprintf(__VA_ARGS__);\
+			cprintf("\n");\
+			panic("Error occured"); 	\
+		}\
+	}while(0)
+

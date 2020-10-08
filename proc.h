@@ -1,3 +1,11 @@
+#pragma once
+
+#include "types.h"
+#include "fs.h"
+#include "elf.h"
+#include "param.h"
+#include "mmu.h"
+
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID
@@ -49,6 +57,10 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  // Fields for demand paging
+  char path[DIRSIZ];
+  struct proghdr ph;
 };
 
 // Process memory is laid out contiguously, low addresses first:

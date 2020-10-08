@@ -40,6 +40,34 @@ memset(void *dst, int c, uint n)
   return dst;
 }
 
+int
+memcmp(const void *v1, const void *v2, uint n)
+{
+  const uchar *s1, *s2;
+
+  s1 = v1;
+  s2 = v2;
+  while(n-- > 0){
+    if(*s1 != *s2)
+      return *s1 - *s2;
+    s1++, s2++;
+  }
+
+  return 0;
+}
+
+const char* 
+strnstr(const char* haystack, const char* needle, uint len) 
+{
+	uint needle_len = strlen(needle);
+	const char* end = haystack + len - needle_len;
+	for(const char* it = haystack; it <= end; ++it) {
+		if(memcmp(it, needle, needle_len) == 0)
+			return it;
+	}
+	return 0;
+}
+
 char*
 strchr(const char *s, char c)
 {

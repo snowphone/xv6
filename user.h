@@ -1,3 +1,7 @@
+#pragma once
+
+#include "types.h"
+
 struct stat;
 struct rtcdate;
 
@@ -33,6 +37,7 @@ int strcmp(const char*, const char*);
 void printf(int, const char*, ...);
 char* gets(char*, int max);
 uint strlen(const char*);
+const char* strnstr(const char* haystack, const char* needle, uint len);
 void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
