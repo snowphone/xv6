@@ -180,6 +180,20 @@ isdirempty(struct inode *dp)
   return 1;
 }
 
+int sys_testsys(void) {
+	int i;
+	char* ptr;
+	char* str;
+	int fd;
+
+	argint(0, &i);
+	argptr(1, &ptr, 4);
+	argstr(2, &str);
+	argfd(3, &fd, 0);
+
+	return 0;
+}
+
 //PAGEBREAK!
 int
 sys_unlink(void)
