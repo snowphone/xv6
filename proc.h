@@ -61,6 +61,9 @@ struct proc {
   // Fields for demand paging
   char path[DIRSIZ];
   struct proghdr ph;
+
+  // For waking up in O(1)
+  struct proc* next;
 };
 
 // Process memory is laid out contiguously, low addresses first:

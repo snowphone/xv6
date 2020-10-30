@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "sleeplock.h"
 
 struct {
   struct spinlock lock;
@@ -466,6 +467,22 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
       p->state = RUNNABLE;
+}
+
+// Wake up only one process sleeping on the sleeplock.
+void
+wakeup_only(struct sleeplock *lk)
+{
+  acquire(&ptable.lock);
+  if(lk->head) {
+	  struct proc *p = lk->head;
+	  lk->head = lk->head->next; // Pop
+      if(!(p->state == SLEEPING && p->chan == lk))
+        panic("the process in the queue must be asleep");
+	  else
+	    p->state = RUNNING;
+  }
+  release(&ptable.lock);
 }
 
 // Wake up all processes sleeping on chan.
