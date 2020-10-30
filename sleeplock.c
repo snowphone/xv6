@@ -35,14 +35,6 @@ enqueue(struct proc* head, struct proc* item) {
 	return head;
 }
 
-static void printQueue(struct proc* head) {
-	cprintf("Me: %d\t", myproc()->pid);
-	for(struct proc* it = head; it; it = it->next) {
-		cprintf("pid: %d -> ", it->pid);
-	}
-	cprintf("\n");
-}
-
 void
 acquiresleep(struct sleeplock *lk)
 {
@@ -50,7 +42,6 @@ acquiresleep(struct sleeplock *lk)
   struct proc* me = myproc();
   while (lk->locked) {
     lk->head = enqueue(lk->head, me);
-	printQueue(lk->head);
     sleep(lk, &lk->lk);
   }
   lk->locked = 1;
@@ -64,7 +55,7 @@ releasesleep(struct sleeplock *lk)
   acquire(&lk->lk);
   lk->locked = 0;
   lk->pid = 0;
-  wakeup_only(lk);
+  wakeup_one_proc(lk);
   release(&lk->lk);
 }
 

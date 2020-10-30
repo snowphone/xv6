@@ -469,14 +469,22 @@ wakeup1(void *chan)
       p->state = RUNNABLE;
 }
 
+// Pop the first process, which is waiting for acuiring the lock,
+// and return this process.
+static struct proc* 
+dequeue(struct sleeplock* lk) {
+  struct proc *hd = lk->head;
+  lk->head = lk->head->next; // Pop
+  return hd;
+}
+
 // Wake up only one process sleeping on the sleeplock.
 void
-wakeup_only(struct sleeplock *lk)
+wakeup_one_proc(struct sleeplock *lk)
 {
   acquire(&ptable.lock);
   if(lk->head) {
-	  struct proc *p = lk->head;
-	  lk->head = lk->head->next; // Pop
+	  struct proc *p = dequeue(lk);
       if(!(p->state == SLEEPING && p->chan == lk))
         panic("the process in the queue must be asleep");
 	  else
