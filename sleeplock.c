@@ -20,11 +20,27 @@ initsleeplock(struct sleeplock *lk, char *name)
   lk->head = 0;
 }
 
-static struct proc* enqueue(struct proc* head, struct proc* item) {
+// Push an item at the end of the linked list.
+static struct proc* 
+enqueue(struct proc* head, struct proc* item) {
+	item->next = 0;
 	if(!head)
 		return item;
-	head->next = enqueue(head->next, item);
+	for(struct proc* it = head; it; it = it->next) {
+		if(!it->next) {
+			it->next = item;
+			break;
+		}
+	}
 	return head;
+}
+
+static void printQueue(struct proc* head) {
+	cprintf("Me: %d\t", myproc()->pid);
+	for(struct proc* it = head; it; it = it->next) {
+		cprintf("pid: %d -> ", it->pid);
+	}
+	cprintf("\n");
 }
 
 void
@@ -34,6 +50,7 @@ acquiresleep(struct sleeplock *lk)
   struct proc* me = myproc();
   while (lk->locked) {
     lk->head = enqueue(lk->head, me);
+	printQueue(lk->head);
     sleep(lk, &lk->lk);
   }
   lk->locked = 1;
