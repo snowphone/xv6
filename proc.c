@@ -480,7 +480,7 @@ wakeup_only(struct sleeplock *lk)
       if(!(p->state == SLEEPING && p->chan == lk))
         panic("the process in the queue must be asleep");
 	  else
-	    p->state = RUNNING;
+	    p->state = RUNNABLE;
   }
   release(&ptable.lock);
 }
