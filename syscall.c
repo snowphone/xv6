@@ -105,6 +105,8 @@ extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_testlock(void);
 extern int sys_sematest(void);
+extern int sys_acquire(void);
+extern int sys_release(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -130,6 +132,8 @@ static int (*syscalls[])(void) = {
 [SYS_close]   sys_close,
 [SYS_testlock]sys_testlock,
 [SYS_sematest]sys_sematest,
+[SYS_acquire] sys_acquire,
+[SYS_release] sys_release,
 };
 
 void

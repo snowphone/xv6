@@ -29,6 +29,8 @@ int sleep(int);
 int uptime(void);
 int testlock(void);
 int sematest(int);
+int acquire(void);
+int release(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

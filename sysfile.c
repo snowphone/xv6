@@ -16,6 +16,7 @@
 #include "file.h"
 #include "fcntl.h"
 #include "semaphore.h"
+#include "spinlock.h"
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
@@ -478,4 +479,19 @@ sys_sematest(void)
 			break;
 	}
 	return ret;
+}
+
+static struct sleeplock lk;
+int
+sys_acquire(void)
+{
+	acquiresleep(&lk);
+	return 0;
+}
+
+int
+sys_release(void)
+{
+	releasesleep(&lk);
+	return 0;
 }

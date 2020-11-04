@@ -43,6 +43,8 @@ printf(int fd, const char *fmt, ...)
   int c, i, state;
   uint *ap;
 
+  acquire();
+
   state = 0;
   ap = (uint*)(void*)&fmt + 1;
   for(i = 0; fmt[i]; i++){
@@ -82,4 +84,5 @@ printf(int fd, const char *fmt, ...)
       state = 0;
     }
   }
+  release();
 }
