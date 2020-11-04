@@ -495,12 +495,12 @@ dequeue(struct proc** head_ptr) {
 
 // Wake up only one process sleeping on the sleeplock.
 void
-wakeup_one_proc(struct sleeplock *lk)
+wakeup_one_proc(void* chan, struct proc** head_ptr)
 {
   acquire(&ptable.lock);
-  if(lk->head) {
-	  struct proc *p = dequeue(&lk->head);
-      if(!(p->state == SLEEPING && p->chan == lk))
+  if(*head_ptr) {
+	  struct proc *p = dequeue(head_ptr);
+      if(!(p->state == SLEEPING && p->chan == chan))
         panic("the process in the queue must be asleep");
 	  else
 	    p->state = RUNNABLE;

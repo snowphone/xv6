@@ -40,7 +40,7 @@ releasesleep(struct sleeplock *lk)
   acquire(&lk->lk);
   lk->locked = 0;
   lk->pid = 0;
-  wakeup_one_proc(lk);
+  wakeup_one_proc(lk, &lk->head);
   release(&lk->lk);
 }
 
