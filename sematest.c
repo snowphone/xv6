@@ -5,30 +5,31 @@
 int 
 main()
 {
+	enum {INIT, DOWN, UP};
 	int i, pid;
 
 	// initialize the semaphore
-	sematest(0);
+	sematest(INIT); // Capacity = 5
 
 	for (i = 0; i < 10; i++) {
 		pid = fork();
 
-		if (!pid) 
+		if (!pid)  // child
 			break;
 	}
 	
-	if (pid) {
+	if (pid) { // parent
 		sleep(300);
 		for (i = 0; i < 10; i++) 
 			wait();
 		
-		sematest(1);
-		printf(1, "Final %d\n", sematest(2));
+		sematest(DOWN);
+		printf(1, "Final %d\n", sematest(UP));
 	} 
-	else {
-		printf(1, "%d Down : %d\n", i, sematest(1));
+	else { // child
+		printf(1, "%d Down : %d\n", i, sematest(DOWN));
 		sleep(100);	
-		printf(1, "%d   Up : %d\n", i, sematest(2));
+		printf(1, "%d   Up : %d\n", i, sematest(UP));
 	}
 	
 	exit();
