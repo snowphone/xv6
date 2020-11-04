@@ -28,6 +28,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int testlock(void);
+int sematest(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
