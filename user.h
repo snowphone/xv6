@@ -29,6 +29,7 @@ int sleep(int);
 int uptime(void);
 int testlock(void);
 int sematest(int);
+int rwsematest(int);
 int acquire(void);
 int release(void);
 

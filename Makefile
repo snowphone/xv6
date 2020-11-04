@@ -28,6 +28,7 @@ OBJS = \
 	vectors.o\
 	vm.o\
 	semaphore.o\
+	rwsemaphore.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
@@ -184,6 +185,7 @@ UPROGS=\
 	_zombie\
 	_testlock\
 	_sematest\
+	_rwsematest\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
