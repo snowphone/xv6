@@ -20,21 +20,6 @@ initsleeplock(struct sleeplock *lk, char *name)
   lk->head = 0;
 }
 
-// Push an item at the end of the linked list.
-static struct proc* 
-enqueue(struct proc* head, struct proc* item) {
-	item->next = 0;
-	if(!head)
-		return item;
-	for(struct proc* it = head; it; it = it->next) {
-		if(!it->next) {
-			it->next = item;
-			break;
-		}
-	}
-	return head;
-}
-
 void
 acquiresleep(struct sleeplock *lk)
 {
