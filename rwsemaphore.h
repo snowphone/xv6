@@ -2,8 +2,13 @@
 
 #include "types.h"
 #include "spinlock.h"
+#include <stdbool.h>
 
 struct rwsemaphore {
+	uint refCount;
+	struct spinlock lk;
+	bool writing;
+	struct proc* head;
 };
 
 void initrwsema(struct rwsemaphore* lk);

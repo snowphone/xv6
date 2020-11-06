@@ -75,3 +75,4 @@ struct proc {
 
 extern struct proc* enqueue(struct proc* head, struct proc* item);
 extern struct proc* dequeue(struct proc** head_ptr);
+extern struct proc* cutInQueue(struct proc* head, struct proc* item);

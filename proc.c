@@ -484,6 +484,15 @@ enqueue(struct proc* head, struct proc* item) {
 	return head;
 }
 
+// Similar to enqueue, but it pushes the item at the 
+// front of the queue.
+struct proc* 
+cutInQueue(struct proc* head, struct proc* item)
+{
+	item->next = head;
+	return item;
+}
+
 // Pop the first process, which is waiting for acuiring the lock,
 // and return this process.
 struct proc* 
