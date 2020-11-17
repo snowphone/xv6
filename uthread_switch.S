@@ -6,5 +6,15 @@
  */
 	.globl thread_switch
 thread_switch:
-	/* YOUR CODE HERE */
+	pushal						// Backup registers
+	movl current_thread, %eax
+	movl %esp, (%eax)			// Backup stack
+
+	movl next_thread, %eax
+	movl %eax, current_thread	// Set current_thread = next_thread
+	movl (%eax), %esp			// Restore stack
+	xor %eax, %eax
+	mov %eax, next_thread		// Set next_thread = 0
+	popal						// Restore registers
+
 	ret				/* pop return address from stack */
