@@ -123,7 +123,7 @@ void            sleep(void*, struct spinlock*);
 void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
-void            wakeup_one_proc(struct sleeplock *);
+void            wakeup_one_proc(void* chan, struct proc** head_ptr);
 void            yield(void);
 
 // swtch.S
@@ -191,6 +191,9 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
+
+// semaphore.c
+#include "semaphore.h"
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

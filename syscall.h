@@ -20,4 +20,8 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
-#define SYS_testlock  22
+#define SYS_testlock 22
+#define SYS_sematest 23
+#define SYS_rwsematest 24
+#define SYS_acquire 100
+#define SYS_release 101

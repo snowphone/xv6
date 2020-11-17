@@ -469,23 +469,47 @@ wakeup1(void *chan)
       p->state = RUNNABLE;
 }
 
+// Push an item at the end of the linked list.
+struct proc* 
+enqueue(struct proc* head, struct proc* item) {
+	item->next = 0;
+	if(!head)
+		return item;
+	for(struct proc* it = head; it; it = it->next) {
+		if(!it->next) {
+			it->next = item;
+			break;
+		}
+	}
+	return head;
+}
+
+// Similar to enqueue, but it pushes the item at the 
+// front of the queue.
+struct proc* 
+cutInQueue(struct proc* head, struct proc* item)
+{
+	item->next = head;
+	return item;
+}
+
 // Pop the first process, which is waiting for acuiring the lock,
 // and return this process.
-static struct proc* 
-dequeue(struct sleeplock* lk) {
-  struct proc *hd = lk->head;
-  lk->head = lk->head->next; // Pop
+struct proc* 
+dequeue(struct proc** head_ptr) {
+  struct proc *hd = *head_ptr;
+  *head_ptr = head_ptr[0]->next; // Pop
   return hd;
 }
 
 // Wake up only one process sleeping on the sleeplock.
 void
-wakeup_one_proc(struct sleeplock *lk)
+wakeup_one_proc(void* chan, struct proc** head_ptr)
 {
   acquire(&ptable.lock);
-  if(lk->head) {
-	  struct proc *p = dequeue(lk);
-      if(!(p->state == SLEEPING && p->chan == lk))
+  if(*head_ptr) {
+	  struct proc *p = dequeue(head_ptr);
+      if(!(p->state == SLEEPING && p->chan == chan))
         panic("the process in the queue must be asleep");
 	  else
 	    p->state = RUNNABLE;
