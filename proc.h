@@ -64,6 +64,8 @@ struct proc {
 
   // For waking up in O(1)
   struct proc* next;
+
+  uint scheduler;
 };
 
 // Process memory is laid out contiguously, low addresses first:

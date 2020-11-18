@@ -32,6 +32,7 @@ int sematest(int);
 int rwsematest(int);
 int acquire(void);
 int release(void);
+int uthread_create(void(*)(void));
 
 // ulib.c
 int stat(const char*, struct stat*);

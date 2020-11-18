@@ -81,6 +81,7 @@ thread_create(void (*func)())
   * (int *) (t->sp) = (int)func;           // push return address on stack
   t->sp -= 32;                             // space for registers that thread_switch expects
   t->state = RUNNABLE;
+  uthread_create(thread_schedule);
 }
 
 void 
@@ -97,7 +98,6 @@ mythread(void)
   printf(1, "my thread running\n");
   for (i = 0; i < 100; i++) {
     printf(1, "my thread 0x%x\n", (int) current_thread);
-    thread_yield();
   }
   printf(1, "my thread: exit\n");
   current_thread->state = FREE;

@@ -525,3 +525,16 @@ sys_release(void)
 	releasesleep(&lk);
 	return 0;
 }
+
+int
+sys_uthread_create(void)
+{
+	struct proc *p;
+	int func;
+	if(argint(0, &func) < 0)
+		return -1;
+	p = myproc();
+	if(!p->scheduler)
+		p->scheduler = (uint)func;
+	return 0;
+}

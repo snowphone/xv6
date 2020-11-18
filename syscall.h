@@ -23,5 +23,6 @@
 #define SYS_testlock 22
 #define SYS_sematest 23
 #define SYS_rwsematest 24
+#define SYS_uthread_create 25
 #define SYS_acquire 100
 #define SYS_release 101

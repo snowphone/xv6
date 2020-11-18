@@ -108,6 +108,7 @@ extern int sys_sematest(void);
 extern int sys_rwsematest(void);
 extern int sys_acquire(void);
 extern int sys_release(void);
+extern int sys_uthread_create(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -136,6 +137,7 @@ static int (*syscalls[])(void) = {
 [SYS_rwsematest] sys_rwsematest,
 [SYS_acquire] sys_acquire,
 [SYS_release] sys_release,
+[SYS_uthread_create] sys_uthread_create,
 };
 
 void
