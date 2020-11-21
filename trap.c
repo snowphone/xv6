@@ -103,6 +103,16 @@ trap(struct trapframe *tf)
       release(&tickslock);
     }
     lapiceoi();
+	if(myproc() && myproc()->scheduler) {
+		if((tf->cs&3) == DPL_USER) {
+			tf->esp -= 4;
+			*((uint*)tf->esp) = tf->eip;
+			tf->eip = myproc()->scheduler;
+		} else {
+			// I think this version is a naive one.
+			// kernel -> user switch?
+		}
+	}
     break;
   case T_IRQ0 + IRQ_IDE:
     ideintr();
