@@ -67,18 +67,16 @@ initlog(int dev)
 
 // Copy committed blocks from log to their home location
 static void
-install_trans(void)
+install_trans(int tail, struct buf* lbuf)
 {
-  int tail;
-
-  for (tail = 0; tail < log.lh.n; tail++) {
-    struct buf *lbuf = bread(log.dev, log.start+tail+1); // read log block
-    struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // read dst
-    memmove(dbuf->data, lbuf->data, BSIZE);  // copy block to dst
-    bwrite(dbuf);  // write dst to disk
-    brelse(lbuf);
-    brelse(dbuf);
+  if (!lbuf) {
+    lbuf = bread(log.dev, log.start+tail+1); // read log block
   }
+  struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // read dst
+  memmove(dbuf->data, lbuf->data, BSIZE);  // copy block to dst
+  bwrite(dbuf);  // write dst to disk
+  brelse(dbuf);
+  brelse(lbuf);
 }
 
 // Read the log header from disk into the in-memory log header
@@ -116,7 +114,9 @@ static void
 recover_from_log(void)
 {
   read_head();
-  install_trans(); // if committed, copy from log to disk
+  for (int tail = 0; tail < log.lh.n; tail++) {
+    install_trans(tail, 0); // if committed, copy from log to disk
+  }
   log.lh.n = 0;
   write_head(); // clear the log
 }
@@ -174,30 +174,29 @@ end_op(void)
 }
 
 // Copy modified blocks from cache to log.
-static void
-write_log(void)
+static struct buf*
+write_log(int tail)
 {
-  int tail;
-
-  for (tail = 0; tail < log.lh.n; tail++) {
     struct buf *to = bread(log.dev, log.start+tail+1); // log block
     struct buf *from = bread(log.dev, log.lh.block[tail]); // cache block
     memmove(to->data, from->data, BSIZE);
     bwrite(to);  // write the log
     brelse(from);
-    brelse(to);
-  }
+    // install_trans function will release the buffer 'to'
+  return to;
 }
 
 static void
 commit()
 {
   if (log.lh.n > 0) {
-    write_log();     // Write modified blocks from cache to log
-    write_head();    // Write header to disk -- the real commit
-    install_trans(); // Now install writes to home locations
-    log.lh.n = 0;
-    write_head();    // Erase the transaction from the log
+    for (int tail = 0; tail < log.lh.n; tail++) {
+      struct buf *lbuf = write_log(tail);    // Write modified blocks from cache to log
+      write_head(); // Write header to disk -- the real commit
+      install_trans(tail, lbuf); // Now install writes to home locations
+    }
+	log.lh.n = 0;
+	write_head(); // Erase the transaction from the log
   }
 }
 
